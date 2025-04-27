@@ -1,9 +1,31 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Typography, Button, Box } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
+import { getUserProfile } from '../services/api';
 
 const HomePage = () => {
   const navigate = useNavigate();
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const token = localStorage.getItem('token');
+      if (token) {
+        try {
+          const response = await getUserProfile();
+          const fetchedUser = response.data;
+          setUser(fetchedUser);
+          // Redireciona para o dashboard apenas se o usuário for admin e acabou de fazer login
+          if (fetchedUser.role === 'admin' && window.location.search.includes('fromLogin=true')) {
+            navigate('/admin/dashboard');
+          }
+        } catch (error) {
+          setUser(null);
+        }
+      }
+    };
+    fetchUser();
+  }, [navigate]);
 
   return (
     <Box
@@ -13,7 +35,7 @@ const HomePage = () => {
         flexDirection: 'column',
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundImage: 'url(https://images.unsplash.com/photo-1513256613656-7c529f3f74b8)', // Placeholder
+        backgroundImage: 'url(https://images.unsplash.com/photo-1513256613656-7c529f3f74b8)',
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         textAlign: 'center',

@@ -1,48 +1,44 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useContext } from 'react';
+import { Box, Typography, TextField, Button, Card, CardContent, Alert } from '@mui/material';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
-import { TextField, Button, Card, CardContent, Typography } from '@mui/material';
-import { login } from '../services/api';
+import { AuthContext } from '../context/AuthContext';
 
-// Esquema de validação com yup
 const schema = yup.object({
   email: yup.string().email('Email inválido').required('Email é obrigatório'),
-  password: yup.string().required('Senha é obrigatória').min(6, 'Mínimo de 6 caracteres'),
+  password: yup.string().required('Senha é obrigatória'),
 }).required();
 
 const LoginPage = () => {
-  const navigate = useNavigate();
-  const { register: formRegister, handleSubmit, formState: { errors } } = useForm({
+  const { login } = useContext(AuthContext);
+  const { register, handleSubmit, formState: { errors } } = useForm({
     resolver: yupResolver(schema),
   });
 
   const onSubmit = async (data) => {
     try {
-      const response = await login(data.email, data.password);
-      localStorage.setItem('token', response.data.token);
-      alert('Login realizado com sucesso!');
-      navigate('/');
+      await login(data.email, data.password);
+      alert('Login autorizado');
     } catch (error) {
       alert('Erro ao fazer login: ' + (error.response?.data?.message || 'Tente novamente'));
     }
   };
 
   return (
-    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', backgroundColor: '#1a1a1a' }}>
-      <Card sx={{ maxWidth: 400, padding: 2, backgroundColor: '#2a2a2a' }}>
+    <Box sx={{ p: { xs: 2, md: 4 }, backgroundColor: '#1a1a1a', minHeight: '100vh', mt: 8 }}>
+      <Typography variant="h4" color="#FFD700" gutterBottom>
+        Login
+      </Typography>
+      <Card sx={{ maxWidth: 400, margin: '0 auto', backgroundColor: '#2a2a2a' }}>
         <CardContent>
-          <Typography variant="h5" color="#FFD700" align="center" gutterBottom>
-            Login
-          </Typography>
           <form onSubmit={handleSubmit(onSubmit)}>
             <TextField
               fullWidth
               label="Email"
+              type="email"
               margin="normal"
-              variant="outlined"
-              {...formRegister('email')}
+              {...register('email')}
               error={!!errors.email}
               helperText={errors.email?.message}
               sx={{ input: { color: '#fff' }, label: { color: '#FFD700' }, '& .MuiOutlinedInput-root': { '& fieldset': { borderColor: '#FFD700' } } }}
@@ -52,8 +48,7 @@ const LoginPage = () => {
               label="Senha"
               type="password"
               margin="normal"
-              variant="outlined"
-              {...formRegister('password')}
+              {...register('password')}
               error={!!errors.password}
               helperText={errors.password?.message}
               sx={{ input: { color: '#fff' }, label: { color: '#FFD700' }, '& .MuiOutlinedInput-root': { '& fieldset': { borderColor: '#FFD700' } } }}
@@ -62,21 +57,14 @@ const LoginPage = () => {
               fullWidth
               variant="contained"
               type="submit"
-              sx={{ marginTop: 2, backgroundColor: '#FFD700', color: '#1a1a1a' }}
+              sx={{ mt: 2, backgroundColor: '#FFD700', color: '#1a1a1a' }}
             >
               Entrar
             </Button>
           </form>
-          <Typography
-            align="center"
-            sx={{ marginTop: 2, color: '#FFD700', cursor: 'pointer' }}
-            onClick={() => navigate('/register')}
-          >
-            Não tem conta? Cadastre-se
-          </Typography>
         </CardContent>
       </Card>
-    </div>
+    </Box>
   );
 };
 

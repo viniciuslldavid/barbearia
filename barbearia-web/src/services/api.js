@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'http://localhost:3001', // Atualizado para porta 3001
+  baseURL: 'http://localhost:3001',
 });
 
 api.interceptors.request.use(async (config) => {
@@ -19,9 +19,17 @@ export const register = (name, email, password, phone) =>
   api.post('/register', { name, email, password, phone });
 
 export const getServices = () => api.get('/services');
+
 export const getBarbers = () => api.get('/barbers');
+
 export const createSchedule = (serviceId, barberId, date, time) =>
   api.post('/schedules', { serviceId, barberId, date, time });
+
+export const createPublicSchedule = (serviceId, barberId, date, time, userName, userPhone) =>
+  api.post('/public/schedules', { serviceId, barberId, date, time, userName, userPhone });
+
 export const getUserProfile = () => api.get('/users/profile');
+
+export const getUserSchedules = () => api.get('/schedules');
 
 export default api;

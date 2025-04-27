@@ -1,73 +1,34 @@
-import React, { useState, useEffect } from 'react';
-import { Box, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, CircularProgress } from '@mui/material';
-import axios from 'axios';
+import React from 'react';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { AuthProvider } from './context/AuthContext';
+import Navbar from './components/Navbar';
+import HomePage from './pages/HomePage';
+import LoginPage from './pages/LoginPage';
+import RegisterPage from './pages/RegisterPage';
+import ServicesPage from './pages/ServicesPage';
+import SchedulePage from './pages/SchedulePage';
+import ProfilePage from './pages/ProfilePage';
+import UserSchedulesPage from './pages/UserSchedulesPage';
+import AdminDashboardPage from './pages/AdminDashboardPage';
 
-const AdminDashboardPage = () => {
-  const [schedules, setSchedules] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchSchedules = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        const response = await axios.get('http://localhost:3001/admin/schedules', {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setSchedules(response.data);
-      } catch (error) {
-        alert('Erro ao carregar agendamentos: ' + (error.response?.data?.message || 'Tente novamente'));
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchSchedules();
-  }, []);
-
+function App() {
   return (
-    <Box sx={{ p: 4, backgroundColor: '#1a1a1a', minHeight: '100vh', mt: 8 }}>
-      <Typography variant="h4" color="#FFD700" gutterBottom>
-        Dashboard do Administrador
-      </Typography>
-      {loading ? (
-        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
-          <CircularProgress sx={{ color: '#FFD700' }} />
-        </Box>
-      ) : (
-        <TableContainer component={Paper} sx={{ backgroundColor: '#2a2a2a' }}>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell sx={{ color: '#FFD700' }}>Cliente</TableCell>
-                <TableCell sx={{ color: '#FFD700' }}>Serviço</TableCell>
-                <TableCell sx={{ color: '#FFD700' }}>Barbeiro</TableCell>
-                <TableCell sx={{ color: '#FFD700' }}>Data</TableCell>
-                <TableCell sx={{ color: '#FFD700' }}>Hora</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {schedules.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={5} sx={{ color: '#fff', textAlign: 'center' }}>
-                    Nenhum agendamento encontrado
-                  </TableCell>
-                </TableRow>
-              ) : (
-                schedules.map((schedule) => (
-                  <TableRow key={schedule.id}>
-                    <TableCell sx={{ color: '#fff' }}>{schedule.user_name}</TableCell>
-                    <TableCell sx={{ color: '#fff' }}>{schedule.service_name}</TableCell>
-                    <TableCell sx={{ color: '#fff' }}>{schedule.barber_name}</TableCell>
-                    <TableCell sx={{ color: '#fff' }}>{schedule.schedule_date}</TableCell>
-                    <TableCell sx={{ color: '#fff' }}>{schedule.schedule_time}</TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      )}
-    </Box>
+    <AuthProvider>
+      <Router>
+        <Navbar />
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+          <Route path="/services" element={<ServicesPage />} />
+          <Route path="/schedule" element={<SchedulePage />} />
+          <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/my-schedules" element={<UserSchedulesPage />} />
+          <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
+        </Routes>
+      </Router>
+    </AuthProvider>
   );
-};
+}
 
-export default AdminDashboardPage;
+export default App;
