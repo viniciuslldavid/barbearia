@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Card, CardContent, Typography, Grid } from '@mui/material';
+import { Box, Typography, Container, Grid } from '@mui/material';
 import { getServices } from '../services/api';
 
 const ServicesPage = () => {
   const [services, setServices] = useState([]);
-  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchServices = async () => {
@@ -13,36 +11,30 @@ const ServicesPage = () => {
         const response = await getServices();
         setServices(response.data);
       } catch (error) {
-        alert('Erro ao carregar serviços');
+        console.error('Erro ao buscar serviços:', error);
       }
     };
     fetchServices();
   }, []);
 
   return (
-    <div style={{ padding: 20, backgroundColor: '#1a1a1a', minHeight: '100vh' }}>
-      <Typography variant="h4" color="#FFD700" gutterBottom>
-        Serviços
-      </Typography>
-      <Grid container spacing={3}>
-        {services.map((service) => (
-          <Grid item xs={12} sm={6} md={4} key={service.id}>
-            <Card
-              sx={{ backgroundColor: '#2a2a2a', cursor: 'pointer' }}
-              onClick={() => navigate('/schedule', { state: { serviceId: service.id } })}
-            >
-              <CardContent>
-                <Typography variant="h6" color="#FFD700">
-                  {service.name}
-                </Typography>
-                <Typography color="#fff">R$ {service.price}</Typography>
-                <Typography color="#fff">{service.description}</Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-        ))}
-      </Grid>
-    </div>
+    <Box sx={{ backgroundColor: '#1a1a1a', minHeight: '100vh', color: '#fff', pt: 8 }}>
+      <Container sx={{ py: 6 }}>
+        <Typography variant="h4" color="#FFD700" gutterBottom>
+          Nossos Serviços
+        </Typography>
+        <Grid container spacing={4}>
+          {services.map((service) => (
+            <Grid item xs={12} sm={6} md={4} key={service.id}>
+              <Box sx={{ backgroundColor: '#3a3a3a', p: 3, borderRadius: 2, textAlign: 'center' }}>
+                <Typography variant="h6">{service.name}</Typography>
+                <Typography variant="body2">R$ {service.price.toFixed(2)}</Typography>
+              </Box>
+            </Grid>
+          ))}
+        </Grid>
+      </Container>
+    </Box>
   );
 };
 

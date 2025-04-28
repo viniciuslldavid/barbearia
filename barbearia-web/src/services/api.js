@@ -32,6 +32,10 @@ export const getBarbers = async () => {
   return api.get('/api/barbers');
 };
 
+export const getAvailableTimes = async (params) => {
+  return api.get('/api/available-times', { params });
+};
+
 export const createSchedule = async (serviceId, barberId, date, time) => {
   return api.post('/api/schedules', { serviceId, barberId, date, time });
 };
@@ -46,6 +50,18 @@ export const getUserSchedules = async () => {
 
 export const getAllSchedules = async () => {
   return api.get('/api/admin/schedules');
+};
+
+export const updateScheduleStatus = async (scheduleId, status) => {
+  return api.post('/api/admin/schedules/update-status', { scheduleId, status });
+};
+
+export const createBarber = async (name) => {
+  return api.post('/api/admin/barbers', { name });
+};
+
+export const createService = async (name, price) => {
+  return api.post('/api/admin/services', { name, price });
 };
 
 export default api;

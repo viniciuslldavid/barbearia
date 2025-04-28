@@ -14,6 +14,7 @@ router.post('/register', userController.register);
 router.post('/login', userController.login);
 router.get('/services', serviceController.getServices);
 router.get('/barbers', barberController.getBarbers);
+router.get('/available-times', scheduleController.getAvailableTimes);
 
 // Novo endpoint para agendamento público (sem autenticação)
 router.post('/public/schedules', scheduleController.createPublicSchedule);
@@ -25,5 +26,8 @@ router.get('/schedules', authMiddleware, scheduleController.getUserSchedules);
 
 // Rotas de administrador
 router.get('/admin/schedules', authMiddleware, adminMiddleware, scheduleController.getAllSchedules);
+router.post('/admin/schedules/update-status', authMiddleware, adminMiddleware, scheduleController.updateScheduleStatus);
+router.post('/admin/barbers', authMiddleware, adminMiddleware, scheduleController.createBarber);
+router.post('/admin/services', authMiddleware, adminMiddleware, scheduleController.createService);
 
 module.exports = router;
