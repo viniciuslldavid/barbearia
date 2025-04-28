@@ -12,8 +12,8 @@ app.use(cors({
 app.use(express.json());
 
 // Rotas
-app.use('/api', require('./routes/api')); // Inclui rotas de login e register
-app.use('/schedules', require('./routes/scheduleRoutes'));
+app.use('/api', require('./routes/api')); // Rotas de autenticação e outras
+app.use('/api', require('./routes/scheduleRoutes')); // Rotas de agendamentos
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {

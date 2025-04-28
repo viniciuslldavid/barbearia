@@ -13,39 +13,39 @@ api.interceptors.request.use((config) => {
 });
 
 export const login = async (email, password) => {
-  return api.post('/login', { email, password });
+  return api.post('/api/login', { email, password });
 };
 
 export const register = async (name, email, password, phone) => {
-  return api.post('/register', { name, email, password, phone });
+  return api.post('/api/register', { name, email, password, phone });
 };
 
 export const getUserProfile = async () => {
-  return api.get('/users/profile');
+  return api.get('/api/users/profile');
 };
 
 export const getServices = async () => {
-  return api.get('/services');
+  return api.get('/api/services');
 };
 
 export const getBarbers = async () => {
-  return api.get('/barbers');
+  return api.get('/api/barbers');
 };
 
 export const createSchedule = async (serviceId, barberId, date, time) => {
-  return api.post('/schedules', { serviceId, barberId, date, time });
+  return api.post('/api/schedules', { serviceId, barberId, date, time });
 };
 
 export const createPublicSchedule = async (serviceId, barberId, date, time, userName, userPhone) => {
-  return api.post('/public/schedules', { serviceId, barberId, date, time, userName, userPhone });
+  return api.post('/api/public/schedules', { serviceId, barberId, date, time, userName, userPhone });
 };
 
 export const getUserSchedules = async () => {
-  return api.get('/schedules');
+  return api.get('/api/schedules');
 };
 
 export const getAllSchedules = async () => {
-  return api.get('/admin/schedules');
+  return api.get('/api/admin/schedules');
 };
 
 export default api;
