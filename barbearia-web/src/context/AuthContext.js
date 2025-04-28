@@ -12,11 +12,14 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const loadUser = async () => {
       const token = localStorage.getItem('token');
+      console.log('Token encontrado no localStorage:', token); // Log para depuração
       if (token) {
         try {
           const response = await getUserProfile();
+          console.log('Perfil do usuário obtido:', response.data); // Log para depuração
           setUser(response.data);
         } catch (error) {
+          console.error('Erro ao carregar perfil do usuário:', error.response?.data || error.message); // Log para depuração
           setUser(null);
           localStorage.removeItem('token');
         }

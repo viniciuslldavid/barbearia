@@ -1,5 +1,6 @@
-import React, { useContext } from 'react';
-import { Box, Typography, TextField, Button, Card, CardContent, Alert } from '@mui/material';
+import React, { useContext, useState } from 'react';
+import { Box, Typography, TextField, Button, Alert, Link } from '@mui/material';
+import { Link as RouterLink } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
@@ -12,6 +13,8 @@ const schema = yup.object({
 
 const LoginPage = () => {
   const { login } = useContext(AuthContext);
+  const [error, setError] = useState(null);
+
   const { register, handleSubmit, formState: { errors } } = useForm({
     resolver: yupResolver(schema),
   });
@@ -19,9 +22,8 @@ const LoginPage = () => {
   const onSubmit = async (data) => {
     try {
       await login(data.email, data.password);
-      alert('Login autorizado');
-    } catch (error) {
-      alert('Erro ao fazer login: ' + (error.response?.data?.message || 'Tente novamente'));
+    } catch (err) {
+      setError(err.response?.data?.message || 'Erro ao fazer login');
     }
   };
 
@@ -30,40 +32,46 @@ const LoginPage = () => {
       <Typography variant="h4" color="#FFD700" gutterBottom>
         Login
       </Typography>
-      <Card sx={{ maxWidth: 400, margin: '0 auto', backgroundColor: '#2a2a2a' }}>
-        <CardContent>
-          <form onSubmit={handleSubmit(onSubmit)}>
-            <TextField
-              fullWidth
-              label="Email"
-              type="email"
-              margin="normal"
-              {...register('email')}
-              error={!!errors.email}
-              helperText={errors.email?.message}
-              sx={{ input: { color: '#fff' }, label: { color: '#FFD700' }, '& .MuiOutlinedInput-root': { '& fieldset': { borderColor: '#FFD700' } } }}
-            />
-            <TextField
-              fullWidth
-              label="Senha"
-              type="password"
-              margin="normal"
-              {...register('password')}
-              error={!!errors.password}
-              helperText={errors.password?.message}
-              sx={{ input: { color: '#fff' }, label: { color: '#FFD700' }, '& .MuiOutlinedInput-root': { '& fieldset': { borderColor: '#FFD700' } } }}
-            />
-            <Button
-              fullWidth
-              variant="contained"
-              type="submit"
-              sx={{ mt: 2, backgroundColor: '#FFD700', color: '#1a1a1a' }}
-            >
-              Entrar
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
+      <Box component="form" onSubmit={handleSubmit(onSubmit)} sx={{ maxWidth: 400, margin: '0 auto' }}>
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+        )}
+        <TextField
+          fullWidth
+          label="Email"
+          margin="normal"
+          {...register('email')}
+          error={!!errors.email}
+          helperText={errors.email?.message}
+          sx={{ input: { color: '#fff' }, label: { color: '#FFD700' }, '& .MuiOutlinedInput-root': { '& fieldset': { borderColor: '#FFD700' } } }}
+        />
+        <TextField
+          fullWidth
+          label="Senha"
+          type="password"
+          margin="normal"
+          {...register('password')}
+          error={!!errors.password}
+          helperText={errors.password?.message}
+          sx={{ input: { color: '#fff' }, label: { color: '#FFD700' }, '& .MuiOutlinedInput-root': { '& fieldset': { borderColor: '#FFD700' } } }}
+        />
+        <Button
+          fullWidth
+          variant="contained"
+          type="submit"
+          sx={{ mt: 2, backgroundColor: '#FFD700', color: '#1a1a1a' }}
+        >
+          Entrar
+        </Button>
+        <Typography sx={{ mt: 2, color: '#FFFFFF', textAlign: 'center' }}>
+          Não tem uma conta?{' '}
+          <Link component={RouterLink} to="/register" sx={{ color: '#FFD700' }}>
+            Registre-se
+          </Link>
+        </Typography>
+      </Box>
     </Box>
   );
 };

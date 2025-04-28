@@ -4,7 +4,7 @@ const api = axios.create({
   baseURL: 'http://localhost:3001',
 });
 
-api.interceptors.request.use(async (config) => {
+api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
@@ -12,24 +12,40 @@ api.interceptors.request.use(async (config) => {
   return config;
 });
 
-export const login = (email, password) =>
-  api.post('/login', { email, password });
+export const login = async (email, password) => {
+  return api.post('/login', { email, password });
+};
 
-export const register = (name, email, password, phone) =>
-  api.post('/register', { name, email, password, phone });
+export const register = async (name, email, password, phone) => {
+  return api.post('/register', { name, email, password, phone });
+};
 
-export const getServices = () => api.get('/services');
+export const getUserProfile = async () => {
+  return api.get('/users/profile');
+};
 
-export const getBarbers = () => api.get('/barbers');
+export const getServices = async () => {
+  return api.get('/services');
+};
 
-export const createSchedule = (serviceId, barberId, date, time) =>
-  api.post('/schedules', { serviceId, barberId, date, time });
+export const getBarbers = async () => {
+  return api.get('/barbers');
+};
 
-export const createPublicSchedule = (serviceId, barberId, date, time, userName, userPhone) =>
-  api.post('/public/schedules', { serviceId, barberId, date, time, userName, userPhone });
+export const createSchedule = async (serviceId, barberId, date, time) => {
+  return api.post('/schedules', { serviceId, barberId, date, time });
+};
 
-export const getUserProfile = () => api.get('/users/profile');
+export const createPublicSchedule = async (serviceId, barberId, date, time, userName, userPhone) => {
+  return api.post('/public/schedules', { serviceId, barberId, date, time, userName, userPhone });
+};
 
-export const getUserSchedules = () => api.get('/schedules');
+export const getUserSchedules = async () => {
+  return api.get('/schedules');
+};
+
+export const getAllSchedules = async () => {
+  return api.get('/admin/schedules');
+};
 
 export default api;

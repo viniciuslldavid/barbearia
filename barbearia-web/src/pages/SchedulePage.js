@@ -1,48 +1,59 @@
-import React, { useState, useEffect } from 'react';
-import { Box, Typography, TextField, MenuItem, Button, Card, CardContent, Alert } from '@mui/material';
+import React, { useState, useEffect, useContext } from 'react';
+import { Box, Typography, TextField, Button, MenuItem, Select, InputLabel, FormControl, Alert } from '@mui/material';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
-import { useNavigate } from 'react-router-dom';
+import { AuthContext } from '../context/AuthContext';
 import { getServices, getBarbers, createSchedule, createPublicSchedule } from '../services/api';
+import { addYears, format } from 'date-fns';
 
-const schema = yup.object({
-  serviceId: yup.number().required('Selecione um serviço'),
-  barberId: yup.number().required('Selecione um barbeiro'),
-  date: yup.string().required('Selecione uma data'),
-  time: yup.string().required('Selecione um horário'),
-  userName: yup.string().when('$isLoggedIn', {
-    is: false,
-    then: yup.string().required('Nome é obrigatório quando não está logado'),
-    otherwise: yup.string().notRequired(),
+const getSchema = (isLoggedIn) => yup.object({
+  serviceId: yup.number().required('Serviço é obrigatório'),
+  barberId: yup.number().required('Barbeiro é obrigatório'),
+  date: yup
+    .string()
+    .required('Data é obrigatória')
+    .test('is-future-date', 'A data deve ser entre hoje e 1 ano no futuro', (value) => {
+      const selectedDate = new Date(value);
+      const today = new Date();
+      const maxDate = addYears(today, 1);
+      return selectedDate >= today && selectedDate <= maxDate;
+    }),
+  time: yup.string().required('Horário é obrigatório'),
+  userName: yup.string().when([], {
+    is: () => !isLoggedIn,
+    then: (schema) => schema.required('Nome é obrigatório para agendamentos sem login'),
+    otherwise: (schema) => schema.notRequired(),
   }),
-  userPhone: yup.string().when('$isLoggedIn', {
-    is: false,
-    then: yup.string().required('Telefone é obrigatório quando não está logado'),
-    otherwise: yup.string().notRequired(),
+  userPhone: yup.string().when([], {
+    is: () => !isLoggedIn,
+    then: (schema) => schema.required('Telefone é obrigatório para agendamentos sem login'),
+    otherwise: (schema) => schema.notRequired(),
   }),
 }).required();
 
 const SchedulePage = () => {
-  const navigate = useNavigate();
+  const { user } = useContext(AuthContext);
+  const isLoggedIn = !!user;
   const [services, setServices] = useState([]);
   const [barbers, setBarbers] = useState([]);
-  const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem('token'));
+  const [success, setSuccess] = useState(false);
 
-  const { register, handleSubmit, formState: { errors }, setValue } = useForm({
-    resolver: yupResolver(schema),
-    context: { isLoggedIn },
+  const { register, handleSubmit, formState: { errors } } = useForm({
+    resolver: yupResolver(getSchema(isLoggedIn)),
   });
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const servicesResponse = await getServices();
+        const [servicesResponse, barbersResponse] = await Promise.all([
+          getServices(),
+          getBarbers(),
+        ]);
         setServices(servicesResponse.data);
-        const barbersResponse = await getBarbers();
         setBarbers(barbersResponse.data);
       } catch (error) {
-        alert('Erro ao carregar dados: ' + (error.response?.data?.message || 'Tente novamente'));
+        console.error('Erro ao buscar dados:', error);
       }
     };
     fetchData();
@@ -50,131 +61,126 @@ const SchedulePage = () => {
 
   const onSubmit = async (data) => {
     try {
+      const formattedTime = data.time.includes(':') && data.time.split(':').length === 2 ? `${data.time}:00` : data.time;
+
       if (isLoggedIn) {
-        await createSchedule(data.serviceId, data.barberId, data.date, data.time);
+        await createSchedule(data.serviceId, data.barberId, data.date, formattedTime);
       } else {
-        await createPublicSchedule(data.serviceId, data.barberId, data.date, data.time, data.userName, data.userPhone);
+        await createPublicSchedule(data.serviceId, data.barberId, data.date, formattedTime, data.userName, data.userPhone);
       }
-      alert('Agendamento realizado com sucesso!');
-      navigate('/');
+      setSuccess(true);
     } catch (error) {
-      alert('Erro ao criar agendamento: ' + (error.response?.data?.message || 'Tente novamente'));
+      console.error('Erro ao criar agendamento:', error);
     }
   };
 
-  const times = [
-    '09:00', '10:00', '11:00', '12:00',
-    '13:00', '14:00', '15:00', '16:00', '17:00', '18:00'
-  ];
+  const today = format(new Date(), 'yyyy-MM-dd');
+  const maxDate = format(addYears(new Date(), 1), 'yyyy-MM-dd');
 
   return (
     <Box sx={{ p: { xs: 2, md: 4 }, backgroundColor: '#1a1a1a', minHeight: '100vh', mt: 8 }}>
       <Typography variant="h4" color="#FFD700" gutterBottom>
         Agendamento
       </Typography>
-      <Alert severity="info" sx={{ mb: 3 }}>
-        Você pode agendar sem fazer login. No entanto, para ver seus agendamentos futuros, é necessário registrar-se e fazer login.
-      </Alert>
-      <Card sx={{ maxWidth: 600, margin: '0 auto', backgroundColor: '#2a2a2a' }}>
-        <CardContent>
-          <form onSubmit={handleSubmit(onSubmit)}>
-            <TextField
-              select
-              fullWidth
-              label="Serviço"
-              margin="normal"
+      {success ? (
+        <Alert severity="success" sx={{ mb: 2 }}>
+          Agendamento criado com sucesso!
+        </Alert>
+      ) : (
+        <Box component="form" onSubmit={handleSubmit(onSubmit)} sx={{ maxWidth: 600, margin: '0 auto' }}>
+          <FormControl fullWidth margin="normal" error={!!errors.serviceId}>
+            <InputLabel sx={{ color: '#FFD700' }}>Serviço</InputLabel>
+            <Select
               {...register('serviceId')}
-              error={!!errors.serviceId}
-              helperText={errors.serviceId?.message}
-              sx={{ input: { color: '#fff' }, label: { color: '#FFD700' }, '& .MuiOutlinedInput-root': { '& fieldset': { borderColor: '#FFD700' } } }}
+              defaultValue=""
+              sx={{ color: '#fff', '& .MuiOutlinedInput-notchedOutline': { borderColor: '#FFD700' } }}
             >
+              <MenuItem value="">Selecione um serviço</MenuItem>
               {services.map((service) => (
                 <MenuItem key={service.id} value={service.id}>
-                  {service.name} - R${(parseFloat(service.price) || 0).toFixed(2)}
+                  {service.name}
                 </MenuItem>
               ))}
-            </TextField>
+            </Select>
+            {errors.serviceId && <Typography color="error">{errors.serviceId.message}</Typography>}
+          </FormControl>
 
-            <TextField
-              select
-              fullWidth
-              label="Barbeiro"
-              margin="normal"
+          <FormControl fullWidth margin="normal" error={!!errors.barberId}>
+            <InputLabel sx={{ color: '#FFD700' }}>Barbeiro</InputLabel>
+            <Select
               {...register('barberId')}
-              error={!!errors.barberId}
-              helperText={errors.barberId?.message}
-              sx={{ input: { color: '#fff' }, label: { color: '#FFD700' }, '& .MuiOutlinedInput-root': { '& fieldset': { borderColor: '#FFD700' } } }}
+              defaultValue=""
+              sx={{ color: '#fff', '& .MuiOutlinedInput-notchedOutline': { borderColor: '#FFD700' } }}
             >
+              <MenuItem value="">Selecione um barbeiro</MenuItem>
               {barbers.map((barber) => (
                 <MenuItem key={barber.id} value={barber.id}>
                   {barber.name}
                 </MenuItem>
               ))}
-            </TextField>
+            </Select>
+            {errors.barberId && <Typography color="error">{errors.barberId.message}</Typography>}
+          </FormControl>
 
-            <TextField
-              fullWidth
-              label="Data"
-              type="date"
-              margin="normal"
-              InputLabelProps={{ shrink: true }}
-              {...register('date')}
-              error={!!errors.date}
-              helperText={errors.date?.message}
-              sx={{ input: { color: '#fff' }, label: { color: '#FFD700' }, '& .MuiOutlinedInput-root': { '& fieldset': { borderColor: '#FFD700' } } }}
-            />
+          <TextField
+            fullWidth
+            label="Data"
+            type="date"
+            margin="normal"
+            InputLabelProps={{ shrink: true, style: { color: '#FFD700' } }}
+            InputProps={{ style: { color: '#fff' }, min: today, max: maxDate }}
+            sx={{ '& .MuiOutlinedInput-root': { '& fieldset': { borderColor: '#FFD700' } } }}
+            {...register('date')}
+            error={!!errors.date}
+            helperText={errors.date?.message}
+          />
 
-            <TextField
-              select
-              fullWidth
-              label="Horário"
-              margin="normal"
-              {...register('time')}
-              error={!!errors.time}
-              helperText={errors.time?.message}
-              sx={{ input: { color: '#fff' }, label: { color: '#FFD700' }, '& .MuiOutlinedInput-root': { '& fieldset': { borderColor: '#FFD700' } } }}
-            >
-              {times.map((time) => (
-                <MenuItem key={time} value={time}>
-                  {time}
-                </MenuItem>
-              ))}
-            </TextField>
+          <TextField
+            fullWidth
+            label="Horário"
+            type="time"
+            margin="normal"
+            InputLabelProps={{ shrink: true, style: { color: '#FFD700' } }}
+            InputProps={{ style: { color: '#fff' } }}
+            sx={{ '& .MuiOutlinedInput-root': { '& fieldset': { borderColor: '#FFD700' } } }}
+            {...register('time')}
+            error={!!errors.time}
+            helperText={errors.time?.message}
+          />
 
-            {!isLoggedIn && (
-              <>
-                <TextField
-                  fullWidth
-                  label="Seu Nome"
-                  margin="normal"
-                  {...register('userName')}
-                  error={!!errors.userName}
-                  helperText={errors.userName?.message}
-                  sx={{ input: { color: '#fff' }, label: { color: '#FFD700' }, '& .MuiOutlinedInput-root': { '& fieldset': { borderColor: '#FFD700' } } }}
-                />
-                <TextField
-                  fullWidth
-                  label="Seu Telefone"
-                  margin="normal"
-                  {...register('userPhone')}
-                  error={!!errors.userPhone}
-                  helperText={errors.userPhone?.message}
-                  sx={{ input: { color: '#fff' }, label: { color: '#FFD700' }, '& .MuiOutlinedInput-root': { '& fieldset': { borderColor: '#FFD700' } } }}
-                />
-              </>
-            )}
+          {!isLoggedIn && (
+            <>
+              <TextField
+                fullWidth
+                label="Nome"
+                margin="normal"
+                {...register('userName')}
+                error={!!errors.userName}
+                helperText={errors.userName?.message}
+                sx={{ input: { color: '#fff' }, label: { color: '#FFD700' }, '& .MuiOutlinedInput-root': { '& fieldset': { borderColor: '#FFD700' } } }}
+              />
+              <TextField
+                fullWidth
+                label="Telefone"
+                margin="normal"
+                {...register('userPhone')}
+                error={!!errors.userPhone}
+                helperText={errors.userPhone?.message}
+                sx={{ input: { color: '#fff' }, label: { color: '#FFD700' }, '& .MuiOutlinedInput-root': { '& fieldset': { borderColor: '#FFD700' } } }}
+              />
+            </>
+          )}
 
-            <Button
-              fullWidth
-              variant="contained"
-              type="submit"
-              sx={{ mt: 2, backgroundColor: '#FFD700', color: '#1a1a1a' }}
-            >
-              Agendar
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
+          <Button
+            fullWidth
+            variant="contained"
+            type="submit"
+            sx={{ mt: 2, backgroundColor: '#FFD700', color: '#1a1a1a' }}
+          >
+            Agendar
+          </Button>
+        </Box>
+      )}
     </Box>
   );
 };

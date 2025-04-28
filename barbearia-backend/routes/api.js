@@ -27,3 +27,5 @@ router.get('/schedules', authMiddleware, scheduleController.getUserSchedules);
 router.get('/admin/schedules', authMiddleware, adminMiddleware, scheduleController.getAllSchedules);
 
 module.exports = router;
+
+app.use('/api', require('./routes/api'));

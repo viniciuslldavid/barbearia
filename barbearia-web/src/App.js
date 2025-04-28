@@ -13,8 +13,8 @@ import AdminDashboardPage from './pages/AdminDashboardPage';
 
 function App() {
   return (
-    <AuthProvider>
-      <Router>
+    <Router>
+      <AuthProvider>
         <Navbar />
         <Routes>
           <Route path="/" element={<HomePage />} />
@@ -26,8 +26,8 @@ function App() {
           <Route path="/my-schedules" element={<UserSchedulesPage />} />
           <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
         </Routes>
-      </Router>
-    </AuthProvider>
+      </AuthProvider>
+    </Router>
   );
 }
 

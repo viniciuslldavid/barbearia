@@ -34,7 +34,7 @@ exports.createPublicSchedule = async (req, res) => {
 };
 
 exports.getUserSchedules = async (req, res) => {
-  console.log('Acessando endpoint /schedules'); // Log para depuração
+  console.log('Acessando endpoint /schedules');
   const userId = req.user.id;
   try {
     const [schedules] = await pool.query(
@@ -54,14 +54,16 @@ exports.getUserSchedules = async (req, res) => {
 exports.getAllSchedules = async (req, res) => {
   try {
     const [schedules] = await pool.query(
-      `SELECT s.id, COALESCE(s.user_name, u.name) as user_name, s.user_phone, sv.name as service_name, b.name as barber_name, s.schedule_date, s.schedule_time
+      `SELECT s.id, COALESCE(s.user_name, u.name) as user_name, COALESCE(s.user_phone, u.phone) as user_phone, sv.name as service_name, b.name as barber_name, DATE_FORMAT(s.schedule_date, '%Y-%m-%d') as schedule_date, TIME_FORMAT(s.schedule_time, '%H:%i:%s') as schedule_time
        FROM schedules s
        LEFT JOIN users u ON s.user_id = u.id
        JOIN services sv ON s.service_id = sv.id
-       JOIN barbers b ON s.barber_id = b.id`
+       JOIN barbers b ON s.barber_id = b.id
+       WHERE s.schedule_date IS NOT NULL AND s.schedule_time IS NOT NULL`
     );
     res.json(schedules);
   } catch (error) {
+    console.error('Erro ao obter agendamentos:', error);
     res.status(500).json({ message: 'Erro ao obter agendamentos' });
   }
 };
