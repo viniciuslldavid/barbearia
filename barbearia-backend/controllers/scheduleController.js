@@ -124,15 +124,13 @@ exports.getAvailableTimes = async (req, res) => {
   try {
     const [existingSchedules] = await pool.query(
       'SELECT schedule_time FROM schedules WHERE schedule_date = ? AND barber_id = ? AND status != "rejected"',
-      [barberId, date]
+      [date, barberId]
     );
 
     const allTimes = [];
     for (let hour = 9; hour <= 18; hour++) {
-      for (let minute = 0; minute < 60; minute += 15) {
-        const time = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}:00`;
-        allTimes.push(time);
-      }
+      const time = `${hour.toString().padStart(2, '0')}:00:00`;
+      allTimes.push(time);
     }
 
     const bookedTimes = existingSchedules.map(schedule => schedule.schedule_time);

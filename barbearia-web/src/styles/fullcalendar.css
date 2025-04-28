@@ -1,0 +1,19 @@
+.fc {
+    background-color: #2a2a2a;
+    color: #fff;
+  }
+  .fc .fc-daygrid-day-number {
+    color: #fff;
+  }
+  .fc .fc-daygrid-day.fc-day-today {
+    background-color: #FFD700;
+    color: #000;
+  }
+  .fc .fc-button {
+    background-color: #FFD700;
+    color: #000;
+    border: none;
+  }
+  .fc .fc-button:hover {
+    background-color: #e6c200;
+  }
